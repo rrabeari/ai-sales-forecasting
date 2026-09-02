@@ -347,21 +347,100 @@ Chiffre d'affaires total :
 
 # 9. PROCHAINE ÉTAPE
 
-# J3 — DATA CLEANING
+## J3 — DATA CLEANING
 
-### Objectifs
+### J3.1 — Définition des règles
+**Statut : VALIDÉ**
 
-1. Charger le dataset ;
-2. vérifier les types ;
-3. traiter les valeurs manquantes ;
-4. vérifier les doublons ;
-5. vérifier les valeurs aberrantes ;
-6. vérifier la cohérence métier ;
-7. standardiser les données ;
-8. produire le dataset nettoyé ;
-9. effectuer les tests de validation ;
-10. créer un nouveau checkpoint.
+Règles définies :
+- contrôle des dates ;
+- contrôle des types ;
+- gestion des valeurs NULL ;
+- contrôle des quantités ;
+- contrôle des prix ;
+- contrôle des doublons `date + product_id` ;
+- recalcul du `revenue` ;
+- conservation des valeurs extrêmes cohérentes ;
+- conservation du fichier RAW original.
 
+### J3.2 — Création du script
+**Statut : VALIDÉ**
+
+Script :
+`src/data/clean_sales.py`
+
+Fonction :
+- lecture du dataset RAW ;
+- nettoyage ;
+- validation ;
+- génération du dataset CLEAN.
+
+### J3.3 — Exécution du nettoyage
+**Statut : VALIDÉ**
+
+Source :
+`data/raw/kshop_sales_synthetic.csv`
+
+Sortie :
+`data/processed/sales_clean.csv`
+
+Résultat :
+- lignes initiales : 5 110 ;
+- lignes finales : 5 110 ;
+- NULL critiques supprimés : 0 ;
+- quantités invalides : 0 ;
+- prix invalides : 0 ;
+- doublons supprimés : 0.
+
+### J3.4 — Contrôle qualité
+**Statut : PASS**
+
+Contrôles effectués :
+- structure ;
+- types ;
+- valeurs NULL ;
+- dates ;
+- doublons ;
+- produits ;
+- quantités ;
+- prix ;
+- revenue ;
+- cohérence produit ;
+- cohérence temporelle.
+
+Résultats :
+- 5 110 lignes ;
+- 14 produits ;
+- 365 jours ;
+- 0 NULL ;
+- 0 doublon ;
+- 0 quantité négative ;
+- 0 prix invalide ;
+- 0 revenu négatif ;
+- 0 erreur `revenue = quantity × unit_price`.
+
+### J3.5 — Comparaison RAW vs CLEAN
+**Statut : VALIDÉ**
+
+Résultats :
+- lignes perdues : 0 ;
+- clés `date + product_id` perdues : 0 ;
+- clés ajoutées : 0 ;
+- quantité totale identique : 28 076 ;
+- CA total identique : 67 966 700 AR ;
+- produits identiques : 14 ;
+- période identique : 2025-09-01 → 2026-08-31 ;
+- différences de contenu : 0.
+
+### J3.6 — Validation finale
+**Statut : VALIDÉ**
+
+Le dataset nettoyé est validé pour les prochaines étapes du projet.
+
+Dataset final :
+`data/processed/sales_clean.csv`
+
+**J3 — DATA CLEANING : VALIDÉ**
 ---
 
 ## 10. Règle de travail du projet
