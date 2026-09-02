@@ -72,3 +72,6 @@ htmlcov/
 build/
 dist/
 *.egg-info/
+
+# Database exports / dumps
+*.sql
