@@ -1,0 +1,13 @@
+numpy==2.5.2
+pandas==3.0.5
+scikit-learn==1.9.0
+matplotlib==3.11.0
+plotly==6.9.0
+streamlit==1.63.0
+SQLAlchemy==2.0.51
+psycopg2-binary==2.9.11
+python-dotenv
+joblib==1.5.3
+openpyxl==3.1.5
+jupyter
+pytest==9.0.3
