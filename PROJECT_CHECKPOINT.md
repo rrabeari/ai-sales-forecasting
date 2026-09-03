@@ -1,470 +1,1083 @@
 # AI Sales Forecasting — Project Checkpoint
 
 > Dernière mise à jour : 2026-09-03
-> Checkpoint : J2.6
-> Statut global : **J2 — DATASET VALIDÉ**
+> Checkpoint : **J4.5.5**
+> Statut global : **J4 — EDA EN COURS**
 
 ---
 
-## 1. Projet
+# 1. Projet
 
 **Nom :** AI Sales Forecasting
 
-**Objectif :**
+**Objectif :** construire un système de prévision des ventes capable de prévoir la demande produit à **J+1 → J+7**, puis de proposer des recommandations de stock et de commande.
 
-Construire une solution de prévision des ventes permettant de :
-
-1. récupérer les données de ventes KShop ;
-2. nettoyer et préparer les données ;
-3. analyser les tendances ;
-4. créer des variables prédictives ;
-5. entraîner un modèle Machine Learning ;
-6. prévoir la demande J+1 à J+7 ;
-7. produire des recommandations de stock ;
-8. présenter les résultats dans un dashboard Streamlit ;
-9. préparer le projet pour la production.
-
----
-
-## 2. Architecture cible
+**Architecture cible :**
 
 ```text
 KShop / PostgreSQL
-        │
-        ▼
-Extraction des ventes
-        │
-        ▼
+        ↓
+Python / Pandas
+        ↓
 Data Cleaning
-        │
-        ▼
-EDA / Analyse
-        │
-        ▼
+        ↓
+EDA
+        ↓
 Feature Engineering
-        │
-        ▼
+        ↓
 Machine Learning
-        │
-        ▼
+        ↓
 Forecast J+1 → J+7
-        │
-        ▼
+        ↓
 Stock Recommendation
-        │
-        ▼
+        ↓
 Streamlit Dashboard
-        │
-        ▼
-Production
 ```
 
 ---
 
-## 3. Stack technique
+# 2. Stack technique
 
-| Technologie     | Version / choix                      |
-| --------------- | ------------------------------------ |
-| Python          | 3.12.14                              |
-| Conda           | environnement `ai-sales-forecasting` |
-| NumPy           | 2.5.2                                |
-| Pandas          | 3.0.5                                |
-| Scikit-learn    | 1.9.0                                |
-| Matplotlib      | 3.11.0                               |
-| Plotly          | 6.9.0                                |
-| Streamlit       | 1.63.0                               |
-| SQLAlchemy      | 2.0.51                               |
-| psycopg2        | 2.9.11                               |
-| Joblib          | 1.5.3                                |
-| OpenPyXL        | 3.1.5                                |
-| Pytest          | 9.0.3                                |
-| Jupyter         | Installé                             |
-| Database        | PostgreSQL / Neon                    |
-| Version control | Git / GitHub                         |
+* Python 3.12.14
+* Pandas 3.0.5
+* NumPy 2.5.2
+* Scikit-learn 1.9.0
+* Matplotlib 3.11.0
+* Plotly 6.9.0
+* Streamlit 1.63.0
+* SQLAlchemy 2.0.51
+* PostgreSQL
+* psycopg2
+* python-dotenv
+* Joblib 1.5.3
+* OpenPyXL 3.1.5
+* Jupyter
+* Pytest 9.0.3
+* Git / GitHub
 
 ---
 
-## 4. Structure actuelle
+# 3. Dataset
+
+**Source métier :** structure/catalogue KShop
+
+**Nature :** dataset synthétique professionnel généré pour le projet.
+
+> Les données utilisées pour le forecasting sont synthétiques et ne représentent pas des transactions clients réelles.
+
+**Fichier RAW :**
+
+```text
+data/raw/kshop_sales_synthetic.csv
+```
+
+**Fichier CLEAN :**
+
+```text
+data/processed/sales_clean.csv
+```
+
+### Caractéristiques
+
+* Période : 2025-09-01 → 2026-08-31
+* 365 jours
+* 14 produits
+* 5 110 observations
+* granularité : produit × jour
+* 7 colonnes :
+
+  * date
+  * product_id
+  * product_name
+  * category
+  * quantity
+  * unit_price
+  * revenue
+
+### Résultats globaux
+
+* Quantité totale : **28 076**
+* CA total : **67 966 700 AR**
+* Quantité moyenne par jour : **76,92**
+* CA moyen par jour : **186 210,14 AR**
+* Quantité maximale : **26**
+* CA maximal par observation : **81 000 AR**
+* Valeurs NULL : **0**
+* Doublons date + produit : **0**
+
+---
+
+# 4. J1 — INITIALISATION
+
+## J1.1 — Structure du projet
+
+**Statut : ✅ VALIDÉ**
+
+Structure créée :
 
 ```text
 ai-sales-forecasting/
-│
 ├── config/
-│
 ├── dashboard/
-│
 ├── data/
 │   ├── processed/
+│   │   ├── eda/
+│   │   └── sales_clean.csv
 │   └── raw/
 │       └── kshop_sales_synthetic.csv
-│
 ├── models/
-│
 ├── notebooks/
-│
 ├── src/
 │   ├── data/
-│   │   └── generate_synthetic_sales.py
 │   ├── features/
 │   ├── forecasting/
 │   ├── models/
 │   └── utils/
-│
 ├── tests/
-│
 ├── .env.example
 ├── .gitignore
-├── README.md
 ├── PROJECT_CHECKPOINT.md
+├── README.md
 ├── requirements.txt
-└── src/
-    └── main.py
+└── src/main.py
 ```
 
----
+## J1.2 — Environnement Python
 
-## 5. Git / GitHub
+**Statut : ✅ VALIDÉ**
 
-**Repository :**
-
-`rrabeari/ai-sales-forecasting`
-
-**Branche principale :**
-
-`main`
-
-**Premier commit :**
-
-`07fd765 chore: initialize AI sales forecasting project`
-
-Le repository GitHub est configuré et le premier push a été effectué.
-
-**État Git initial :**
+Environnement Conda :
 
 ```text
-On branch main
-
-Your branch is up to date with 'origin/main'.
-
-nothing to commit, working tree clean
+ai-sales-forecasting
 ```
 
----
-
-# 6. J1 — INITIALISATION
-
-**Statut : VALIDÉ ✅**
-
-### Réalisé
-
-* structure du projet créée ;
-* environnement Conda créé ;
-* Python vérifié ;
-* dépendances principales installées ;
-* `requirements.txt` créé ;
-* `.gitignore` créé ;
-* `.env.example` créé ;
-* Git initialisé ;
-* branche `main` configurée ;
-* repository GitHub créé ;
-* premier commit effectué ;
-* premier push effectué ;
-* `src/main.py` testé avec succès.
-
-**Message obtenu :**
+Python :
 
 ```text
-AI Sales Forecasting - Project initialized successfully.
+3.12.14
+```
+
+Toutes les dépendances principales ont été vérifiées.
+
+## J1.3 — Git
+
+**Statut : ✅ VALIDÉ**
+
+Repository Git initialisé.
+
+Branche :
+
+```text
+main
+```
+
+Remote :
+
+```text
+origin
+```
+
+Repository GitHub :
+
+```text
+rrabeari/ai-sales-forecasting
 ```
 
 ---
 
-# 7. J2 — DATASET
+# 5. J2 — DATASET
 
-**Statut : VALIDÉ ✅**
+**Statut : ✅ VALIDÉ**
 
-## J2.1 — Définition des règles
+## J2.1 — Définition des règles dataset
 
-**Statut : VALIDÉ ✅**
+**✅ VALIDÉ**
 
-* Période : `2025-09-01 → 2026-08-31`
-* Durée : 365 jours
-* Nombre de produits : 14
-* Granularité : 1 produit × 1 jour
-* Nombre maximal de lignes : 5 110
-* Target ML : `quantity`
-* Random seed : 42
+## J2.2 — Générateur Python
 
-### Facteurs de demande
-
-* jour de la semaine ;
-* mois ;
-* popularité produit ;
-* tendance ;
-* variation contrôlée ;
-* jours sans demande.
-
----
-
-## J2.2 — Générateur synthétique
-
-**Statut : VALIDÉ ✅**
-
-**Fichier :**
+Fichier :
 
 ```text
 src/data/generate_synthetic_sales.py
 ```
 
-Le générateur produit un dataset synthétique basé sur la structure métier de KShop.
+**✅ VALIDÉ**
 
-Le caractère synthétique des données est explicitement conservé afin de ne pas présenter des transactions fictives comme des données réelles.
-
----
-
-## J2.3 — Génération du dataset
-
-**Statut : VALIDÉ ✅**
-
-**Fichier généré :**
+Random seed :
 
 ```text
-data/raw/kshop_sales_synthetic.csv
+42
 ```
 
-### Résultat
+## J2.3 — Génération dataset
 
-* Lignes : 5 110
-* Produits : 14
-* Période : `2025-09-01 → 2026-08-31`
-* Colonnes : 7
+**✅ VALIDÉ**
 
----
+Résultat :
 
-## J2.4 — Contrôle qualité initial
+```text
+5 110 lignes
+14 produits
+365 jours
+```
 
-**Statut : VALIDÉ ✅**
+## J2.4 — Quality Control
 
-### Contrôles réalisés
+**✅ PASS**
 
-* aucune valeur NULL ;
-* aucun doublon ;
-* quantités ≥ 0 ;
-* prix > 0 ;
-* revenus ≥ 0 ;
-* cohérence `revenue = quantity × unit_price` ;
-* 14 produits ;
-* 6 catégories ;
-* dates conformes.
+Contrôles :
 
----
+* NULL : 0
+* doublons : 0
+* quantité négative : 0
+* prix invalides : 0
+* CA incohérent : 0
+* période correcte
+* 14 produits
+* 365 jours
 
 ## J2.5 — Analyse statistique
 
-**Statut : VALIDÉ ✅**
+**✅ VALIDÉ**
 
-### Résultats principaux
+Quantité totale :
 
-* Quantité totale vendue : **28 076**
-* Chiffre d'affaires total : **67 966 700 AR**
-* Vente moyenne par jour : **76,92 unités**
-* CA moyen par jour : **186 210,14 AR**
-* Produit le plus vendu : **Coca-Cola 33cl — 3 995 unités**
-* Catégorie avec le plus grand volume : **Boissons — 11 788 unités**
-* Jour de la semaine avec la plus forte demande : **Samedi — 5 120 unités**
-* Mois avec la plus forte demande : **Décembre 2025 — 2 927 unités**
+```text
+28 076
+```
 
-Les tendances observées sont cohérentes avec les facteurs de demande intégrés au générateur.
+CA total :
 
----
+```text
+67 966 700 AR
+```
+
+Produit #1 en volume :
+
+```text
+Coca-Cola 33cl
+3 995 unités
+```
+
+Produit #1 en CA :
+
+```text
+Huile alimentaire 1L
+9 190 500 AR
+```
 
 ## J2.6 — Validation finale
 
-**Statut : PASS ✅**
+**✅ PASS**
 
-### Contrôles finaux
+> **J2 — DATASET : VALIDÉ**
 
-| Contrôle                          | Résultat |
-| --------------------------------- | -------: |
-| Fichier présent                   |        ✅ |
-| 5 110 lignes                      |        ✅ |
-| 7 colonnes                        |        ✅ |
-| 14 produits                       |        ✅ |
-| 365 jours                         |        ✅ |
-| Dates correctes                   |        ✅ |
-| Doublons `date + product_id`      |    **0** |
-| Valeurs NULL                      |    **0** |
-| Quantités négatives               |    **0** |
-| Prix invalides                    |    **0** |
-| Revenus négatifs                  |    **0** |
-| Prix unique par produit           |        ✅ |
-| Catégorie unique par produit      |        ✅ |
-| `revenue = quantity × unit_price` |        ✅ |
-| Valeurs extrêmes contrôlées       |        ✅ |
-
-### Valeurs extrêmes
-
-Le 99e percentile de la quantité vendue est de **17 unités**.
-
-42 observations se situent au-dessus de ce seuil.
-
-Ces observations ont été contrôlées et ne présentent pas d'anomalie évidente. Elles sont conservées afin de représenter les variations naturelles de la demande et pourront être prises en compte lors du Machine Learning.
-
----
-
-# 8. Résultat final J2
-
-## J2 — DATASET : VALIDÉ ✅
-
-Le dataset synthétique est considéré comme **prêt pour la phase de préparation des données et de Machine Learning**.
-
-### Dataset de référence
+Commit :
 
 ```text
-Fichier :
-data/raw/kshop_sales_synthetic.csv
-
-Lignes :
-5 110
-
-Produits :
-14
-
-Période :
-2025-09-01 → 2026-08-31
-
-Target ML :
-quantity
-
-Random seed :
-42
-
-Chiffre d'affaires total :
-67 966 700 AR
+ff629be chore: complete J2 dataset validation
 ```
 
 ---
 
-# 9. PROCHAINE ÉTAPE
+# 6. J3 — DATA CLEANING
 
-## J3 — DATA CLEANING
+**Statut : ✅ VALIDÉ**
 
-### J3.1 — Définition des règles
-**Statut : VALIDÉ**
+## J3.1 — Définition des règles
 
-Règles définies :
-- contrôle des dates ;
-- contrôle des types ;
-- gestion des valeurs NULL ;
-- contrôle des quantités ;
-- contrôle des prix ;
-- contrôle des doublons `date + product_id` ;
-- recalcul du `revenue` ;
-- conservation des valeurs extrêmes cohérentes ;
-- conservation du fichier RAW original.
+**✅ VALIDÉ**
 
-### J3.2 — Création du script
-**Statut : VALIDÉ**
+Règles :
 
-Script :
-`src/data/clean_sales.py`
+* validation des dates
+* validation product_id
+* quantité entière ≥ 0
+* prix > 0
+* recalcul du CA
+* suppression des doublons date + produit
+* nettoyage des espaces texte
+* gestion explicite des NULL critiques
+* conservation des valeurs extrêmes cohérentes
+* fichier RAW jamais modifié
 
-Fonction :
-- lecture du dataset RAW ;
-- nettoyage ;
-- validation ;
-- génération du dataset CLEAN.
+## J3.2 — Script de nettoyage
 
-### J3.3 — Exécution du nettoyage
-**Statut : VALIDÉ**
+Fichier :
 
-Source :
-`data/raw/kshop_sales_synthetic.csv`
+```text
+src/data/clean_sales.py
+```
 
-Sortie :
-`data/processed/sales_clean.csv`
+**✅ PASS**
 
 Résultat :
-- lignes initiales : 5 110 ;
-- lignes finales : 5 110 ;
-- NULL critiques supprimés : 0 ;
-- quantités invalides : 0 ;
-- prix invalides : 0 ;
-- doublons supprimés : 0.
 
-### J3.4 — Contrôle qualité
-**Statut : PASS**
+```text
+Lignes initiales : 5 110
+Lignes finales   : 5 110
+NULL supprimés   : 0
+Quantités invalides : 0
+Prix invalides   : 0
+Doublons supprimés : 0
+```
 
-Contrôles effectués :
-- structure ;
-- types ;
-- valeurs NULL ;
-- dates ;
-- doublons ;
-- produits ;
-- quantités ;
-- prix ;
-- revenue ;
-- cohérence produit ;
-- cohérence temporelle.
+## J3.3 — Exécution du nettoyage
 
-Résultats :
-- 5 110 lignes ;
-- 14 produits ;
-- 365 jours ;
-- 0 NULL ;
-- 0 doublon ;
-- 0 quantité négative ;
-- 0 prix invalide ;
-- 0 revenu négatif ;
-- 0 erreur `revenue = quantity × unit_price`.
+**✅ VALIDÉ**
 
-### J3.5 — Comparaison RAW vs CLEAN
-**Statut : VALIDÉ**
+Fichier généré :
+
+```text
+data/processed/sales_clean.csv
+```
+
+## J3.4 — Quality Control
+
+Fichier :
+
+```text
+src/data/quality_check_clean_sales.py
+```
+
+**✅ PASS**
 
 Résultats :
-- lignes perdues : 0 ;
-- clés `date + product_id` perdues : 0 ;
-- clés ajoutées : 0 ;
-- quantité totale identique : 28 076 ;
-- CA total identique : 67 966 700 AR ;
-- produits identiques : 14 ;
-- période identique : 2025-09-01 → 2026-08-31 ;
-- différences de contenu : 0.
 
-### J3.6 — Validation finale
-**Statut : VALIDÉ**
+```text
+5 110 lignes
+14 produits
+365 jours
+28 076 unités
+67 966 700 AR
+```
 
-Le dataset nettoyé est validé pour les prochaines étapes du projet.
+## J3.5 — RAW vs CLEAN
 
-Dataset final :
-`data/processed/sales_clean.csv`
+Fichier :
 
-**J3 — DATA CLEANING : VALIDÉ**
+```text
+src/data/compare_raw_clean.py
+```
+
+**✅ VALIDÉ**
+
+Résultats :
+
+* même nombre de lignes
+* mêmes colonnes
+* mêmes clés date + produit
+* même quantité totale
+* même CA total
+* mêmes produits
+* même période
+* 0 différence de contenu
+
+## J3.6 — Validation finale
+
+**✅ VALIDÉ**
+
+> **J3 — DATA CLEANING : VALIDÉ**
+
+Commit Git :
+
+```text
+924bcb7 feat: complete J3 data cleaning
+```
+
+Push GitHub :
+
+```text
+main → origin/main
+```
+
+Working tree :
+
+```text
+clean
+```
+
 ---
 
-## 10. Règle de travail du projet
+# 7. J4 — EXPLORATORY DATA ANALYSIS
 
-> **Définition → Implémentation → Test → Analyse → Validation → Checkpoint → Étape suivante**
-
----
-
-## 11. État actuel
-
-| Étape                      | Statut       |
-| -------------------------- | ------------ |
-| J1 — Initialisation        | ✅ VALIDÉ     |
-| J2.1 — Règles dataset      | ✅ VALIDÉ     |
-| J2.2 — Générateur          | ✅ VALIDÉ     |
-| J2.3 — Génération          | ✅ VALIDÉ     |
-| J2.4 — Contrôle qualité    | ✅ VALIDÉ     |
-| J2.5 — Analyse statistique | ✅ VALIDÉ     |
-| J2.6 — Validation finale   | ✅ PASS       |
-| **J2 — Dataset**           | **✅ VALIDÉ** |
-| J3 — Data Cleaning         | ⏳ À DÉMARRER |
+**Statut : 🟡 EN COURS**
 
 ---
 
-**Dernière validation : J2.6 — PASS**
+## J4.1 — Objectifs EDA
 
-**Prochaine action : J3.1 — Définition du Data Cleaning**
+**✅ VALIDÉ**
+
+Objectifs :
+
+1. analyser l'évolution des ventes
+2. identifier les produits leaders
+3. analyser les catégories
+4. analyser les jours de semaine
+5. identifier la saisonnalité
+6. identifier les produits à faible / moyen / fort volume
+7. détecter les valeurs atypiques
+8. identifier les signaux utiles au forecasting
+
+---
+
+# 8. J4.2 — Analyse descriptive
+
+**Statut : ✅ VALIDÉ**
+
+Script :
+
+```text
+src/data/eda_descriptive.py
+```
+
+### Quantité
+
+* moyenne : **5,49**
+* médiane : **5**
+* écart-type : **3,70**
+* minimum : **0**
+* maximum : **26**
+* P95 : **13**
+* P99 : **17**
+* jours à zéro : **142 observations**
+* taux zéro : **2,78 %**
+
+### CA
+
+* moyenne : **13 300,72 AR**
+* médiane : **10 800 AR**
+* minimum : **0 AR**
+* maximum : **81 000 AR**
+* P95 : **33 000 AR**
+* P99 : **49 500 AR**
+
+### Produits
+
+Produit #1 en volume :
+
+```text
+Coca-Cola 33cl
+3 995 unités
+```
+
+Produit #1 en CA :
+
+```text
+Huile alimentaire 1L
+9 190 500 AR
+```
+
+### Catégories
+
+Moteur de volume :
+
+```text
+Boissons
+```
+
+Moteur financier :
+
+```text
+Produits alimentaires
+```
+
+---
+
+# 9. J4.3 — Analyse temporelle
+
+**Statut : ✅ VALIDÉ**
+
+Scripts principaux :
+
+```text
+src/data/eda_descriptive.py
+```
+
+### Analyse quotidienne
+
+* moyenne : **76,92 unités/jour**
+* médiane : **75**
+* minimum : **36**
+* maximum : **152**
+
+Jour maximal :
+
+```text
+2025-12-26
+152 unités
+372 200 AR
+```
+
+### Analyse hebdomadaire
+
+Jour le plus fort :
+
+```text
+Samedi
+7,03 unités / observation
+```
+
+Jour le plus faible :
+
+```text
+Dimanche
+4,17 unités / observation
+```
+
+### Analyse mensuelle
+
+Mois le plus fort :
+
+```text
+Décembre 2025
+```
+
+Mois le plus faible :
+
+```text
+Février 2026
+```
+
+### Tendance
+
+Moyenne 30 premiers jours :
+
+```text
+71,17 unités
+```
+
+Moyenne 30 derniers jours :
+
+```text
+82,93 unités
+```
+
+Évolution :
+
+```text
++16,53 %
+```
+
+Signal récent :
+
+> tendance globalement croissante de la demande.
+
+---
+
+# 10. J4.4 — Produits & catégories
+
+**Statut : ✅ VALIDÉ**
+
+## J4.4.1 — Profil produits
+
+Script :
+
+```text
+src/data/eda_product_profile.py
+```
+
+**✅ PASS**
+
+Produit le plus stable :
+
+```text
+Coca-Cola 33cl
+CV = 0,40
+```
+
+Produit le plus variable :
+
+```text
+Produit 001
+CV = 0,74
+```
+
+## J4.4.2 — Performance produits
+
+Script :
+
+```text
+src/data/eda_product_performance.py
+```
+
+**✅ PASS**
+
+Profils :
+
+```text
+Volume élevé + CA élevé : 4
+Volume élevé + CA faible : 3
+Volume faible + CA élevé : 3
+Volume faible + CA faible : 4
+```
+
+Produits à fort volume et fort CA :
+
+* Coca-Cola 33cl
+* Riz 1kg
+* Sucre 1kg
+* Biscuits Chocolat
+
+Produits à faible volume mais fort CA :
+
+* Huile alimentaire 1L
+* Lait en poudre 400g
+* Jus de fruit 1L
+
+## J4.4.3 — Relations catégories / produits
+
+Script :
+
+```text
+src/data/eda_category_product_relationship.py
+```
+
+**✅ PASS**
+
+Analyse de contribution et HHI réalisée.
+
+Point à surveiller :
+
+> Le dataset contient à la fois `Alimentaire` et `Produits alimentaires`.
+
+Cette différence est conservée pour analyse ultérieure et n'est pas corrigée pendant l'EDA.
+
+## J4.4.4 — Visualisations produits
+
+Script :
+
+```text
+src/data/eda_product_visualizations.py
+```
+
+**✅ PASS**
+
+Visualisations générées :
+
+```text
+data/processed/eda/top_products_quantity.png
+data/processed/eda/top_products_revenue.png
+data/processed/eda/product_volume_vs_revenue.png
+data/processed/eda/category_product_contribution.png
+data/processed/eda/product_demand_variability.png
+```
+
+## J4.4.5 — Synthèse produits & catégories
+
+**✅ VALIDÉ**
+
+Conclusion :
+
+> Les boissons constituent le principal moteur de volume tandis que les produits alimentaires constituent le principal moteur financier.
+
+---
+
+# 11. J4.5 — Anomalies & Relations
+
+**Statut : ✅ VALIDÉ**
+
+---
+
+## J4.5.1 — Détection des valeurs atypiques
+
+Script :
+
+```text
+src/data/eda_anomaly_detection.py
+```
+
+**✅ PASS**
+
+### Quantité
+
+```text
+IQR : 191 observations
+P95 : 191 observations
+P99 : 42 observations
+```
+
+### CA
+
+```text
+IQR : 174 observations
+P95 : 249 observations
+P99 : 42 observations
+```
+
+Conclusion :
+
+> Les valeurs élevées ne sont pas automatiquement considérées comme des erreurs.
+
+Aucune suppression automatique.
+
+Rapport :
+
+```text
+data/processed/eda/anomaly_detection_report.csv
+```
+
+---
+
+## J4.5.2 — Analyse des journées extrêmes
+
+Script :
+
+```text
+src/data/eda_extreme_days.py
+```
+
+**✅ PASS**
+
+### Références
+
+```text
+Moyenne : 76,92
+Médiane : 75
+P95 : 109
+P99 : 124,36
+```
+
+### Journées extrêmes
+
+```text
+6 jours > borne IQR
+17 jours > P95
+4 jours > P99
+```
+
+Les 17 journées > P95 représentent :
+
+```text
+4,66 % des journées
+```
+
+Répartition :
+
+```text
+Vendredi : 6
+Samedi   : 11
+```
+
+Conclusion :
+
+> Les journées extrêmes sont rares et fortement associées aux vendredis et samedis.
+
+Rapport :
+
+```text
+data/processed/eda/extreme_days_analysis.csv
+```
+
+---
+
+## J4.5.3 — Quantité / CA / Prix
+
+Script :
+
+```text
+src/data/eda_quantity_revenue_price.py
+```
+
+**✅ PASS**
+
+Validation :
+
+```text
+CA = quantité × prix
+Écart maximum = 0 AR
+```
+
+### Corrélations globales
+
+```text
+Quantité ↔ CA    :  0,511
+Quantité ↔ Prix  : -0,280
+Prix ↔ CA        :  0,510
+```
+
+### Corrélations au niveau produit
+
+```text
+Prix ↔ CA        :  0,781
+Prix ↔ quantité  : -0,431
+Quantité ↔ CA    :  0,096
+```
+
+Conclusion :
+
+> La quantité reste la variable cible principale du forecasting.
+
+Le CA pourra être recalculé après prévision :
+
+```text
+CA prévisionnel = quantité prévue × prix unitaire
+```
+
+Rapport :
+
+```text
+data/processed/eda/quantity_revenue_price_products.csv
+```
+
+---
+
+## J4.5.4 — Anomalies par produit
+
+Script :
+
+```text
+src/data/eda_product_anomalies.py
+```
+
+**✅ PASS**
+
+14 produits analysés sur 365 observations chacun.
+
+### Produits avec le plus fort taux d'anomalies IQR
+
+```text
+Biscuits Chocolat : 4,38 %
+Jus de fruit 1L   : 2,74 %
+Sucre 1kg         : 2,47 %
+Dentifrice 75ml   : 2,47 %
+Eau Vive 1.5L     : 1,92 %
+```
+
+### Produit le plus variable
+
+```text
+Produit 001
+CV = 0,74
+```
+
+### Produit le plus stable
+
+```text
+Coca-Cola 33cl
+CV = 0,40
+```
+
+Conclusion :
+
+> Les anomalies doivent être interprétées relativement au comportement propre de chaque produit.
+
+Rapport :
+
+```text
+data/processed/eda/product_anomalies_analysis.csv
+```
+
+---
+
+# 12. J4.5.5 — Synthèse anomalies & relations
+
+**Statut : ✅ VALIDÉ**
+
+Script :
+
+```text
+src/data/eda_anomaly_synthesis.py
+```
+
+Rapport :
+
+```text
+data/processed/eda/eda_anomaly_synthesis.csv
+```
+
+Nombre d'indicateurs :
+
+```text
+23
+```
+
+### Synthèse finale
+
+Les analyses montrent :
+
+* les anomalies extrêmes sont rares ;
+* les fortes demandes sont concentrées principalement le vendredi et le samedi ;
+* certains produits présentent davantage de variabilité que d'autres ;
+* `Produit 001` est le produit le plus variable ;
+* `Coca-Cola 33cl` est le produit le plus stable ;
+* `Biscuits Chocolat` présente le taux d'anomalies IQR le plus élevé ;
+* quantité et CA ont une relation positive modérée ;
+* les produits plus chers tendent à présenter des volumes plus faibles ;
+* les anomalies ne doivent pas être supprimées automatiquement.
+
+### Conséquences pour le forecasting
+
+La variable cible principale sera :
+
+```text
+quantity
+```
+
+Les futurs modèles devront exploiter notamment :
+
+```text
+historique de demande
+jour de semaine
+mois
+saisonnalité
+tendance récente
+produit
+variabilité du produit
+```
+
+Les anomalies seront conservées afin de ne pas supprimer artificiellement des comportements de demande potentiellement utiles.
+
+> **J4.5 — ANOMALIES & RELATIONS : VALIDÉ**
+
+---
+
+# 13. J4 — État actuel
+
+| Étape                                   | Statut    |
+| --------------------------------------- | --------- |
+| J4.1 — Objectifs EDA                    | ✅ VALIDÉ  |
+| J4.2 — Analyse descriptive              | ✅ VALIDÉ  |
+| J4.3 — Analyse temporelle               | ✅ VALIDÉ  |
+| J4.4 — Produits & catégories            | ✅ VALIDÉ  |
+| J4.5.1 — Anomalies globales             | ✅ VALIDÉ  |
+| J4.5.2 — Journées extrêmes              | ✅ VALIDÉ  |
+| J4.5.3 — Quantité / CA / Prix           | ✅ VALIDÉ  |
+| J4.5.4 — Anomalies par produit          | ✅ VALIDÉ  |
+| J4.5.5 — Synthèse anomalies & relations | ✅ VALIDÉ  |
+| **J4.6 — Synthèse finale EDA**          | ⏳ À FAIRE |
+
+---
+
+# 14. Fichiers EDA créés
+
+```text
+src/data/eda_descriptive.py
+src/data/eda_product_profile.py
+src/data/eda_product_performance.py
+src/data/eda_category_product_relationship.py
+src/data/eda_product_visualizations.py
+src/data/eda_anomaly_detection.py
+src/data/eda_extreme_days.py
+src/data/eda_quantity_revenue_price.py
+src/data/eda_product_anomalies.py
+src/data/eda_anomaly_synthesis.py
+```
+
+Rapports :
+
+```text
+data/processed/eda/anomaly_detection_report.csv
+data/processed/eda/extreme_days_analysis.csv
+data/processed/eda/quantity_revenue_price_products.csv
+data/processed/eda/product_anomalies_analysis.csv
+data/processed/eda/eda_anomaly_synthesis.csv
+```
+
+Visualisations :
+
+```text
+data/processed/eda/top_products_quantity.png
+data/processed/eda/top_products_revenue.png
+data/processed/eda/product_volume_vs_revenue.png
+data/processed/eda/category_product_contribution.png
+data/processed/eda/product_demand_variability.png
+```
+
+---
+
+# 15. Git — État
+
+Dernier commit validé :
+
+```text
+924bcb7 feat: complete J3 data cleaning
+```
+
+J4.5 a été développé après ce commit.
+
+### Prochain commit prévu
+
+Après validation de l'ensemble des fichiers J4.5 :
+
+```text
+feat: complete J4.5 anomaly and relationship analysis
+```
+
+⚠️ Ne pas committer de données sensibles ou de fichiers `.sql`.
+
+Le fichier :
+
+```text
+*.sql
+```
+
+reste ignoré par Git.
+
+---
+
+# 16. Prochaine étape
+
+## J4.6 — Synthèse finale de l'EDA
+
+Objectifs :
+
+1. consolider toutes les conclusions J4 ;
+2. identifier les variables pertinentes pour le forecasting ;
+3. documenter les risques et limites du dataset ;
+4. déterminer les éléments à conserver pour J5 ;
+5. préparer la transition vers **Feature Engineering**.
+
+Après validation de J4.6 :
+
+```text
+J4 — EDA : VALIDÉ
+```
+
+Puis démarrage de :
+
+```text
+J5 — FEATURE ENGINEERING
+```
+
+avec notamment :
+
+```text
+day_of_week
+day_of_month
+month
+week_of_year
+is_weekend
+lag_1
+lag_7
+lag_14
+rolling_mean_7
+rolling_mean_14
+rolling_mean_30
+```
+
+---
+
+# 17. Checkpoint actuel
+
+**Projet :** AI Sales Forecasting
+
+**Checkpoint :** **J4.5.5**
+
+**Statut :** **J4 — EDA EN COURS**
+
+**Dernière étape validée :**
+
+```text
+J4.5.5 — Synthèse anomalies & relations
+```
+
+**Prochaine étape :**
+
+```text
+J4.6 — Synthèse finale EDA
+```
+
+**J5 — Feature Engineering : NON COMMENCÉ**
