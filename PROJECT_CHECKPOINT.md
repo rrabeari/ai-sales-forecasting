@@ -1,8 +1,9 @@
 # AI Sales Forecasting — Project Checkpoint
 
-> Dernière mise à jour : 2026-09-03
-> Checkpoint : **J5.7**
-> Statut global : **J5 — FEATURE ENGINEERING VALIDÉ**
+> Dernière mise à jour : 2026-09-04
+> Checkpoint : **J6.9**
+> Statut global : **J6 — MACHINE LEARNING TERMINÉ**
+> Prochaine étape : **J7 — FORECASTING J+1 À J+7**
 
 ---
 
@@ -11,14 +12,24 @@
 **Nom :** AI Sales Forecasting
 
 **Objectif :**
-Développer une solution de prévision des ventes basée sur le Machine Learning afin de prévoir la demande future, puis proposer des recommandations de stock.
+
+Construire un système de prévision des ventes permettant de :
+
+* analyser l'historique des ventes ;
+* identifier les tendances et saisonnalités ;
+* construire des variables temporelles et historiques ;
+* entraîner plusieurs modèles de Machine Learning ;
+* sélectionner le meilleur modèle ;
+* prévoir la demande future J+1 à J+7 ;
+* transformer les prévisions en recommandations de stock ;
+* présenter les résultats dans un dashboard Streamlit.
 
 **Architecture cible :**
 
 ```text
-PostgreSQL / KShop
+KShop / PostgreSQL
         ↓
-Python / Pandas
+     Pandas
         ↓
 Data Cleaning
         ↓
@@ -28,106 +39,48 @@ Feature Engineering
         ↓
 Machine Learning
         ↓
-Forecast J+1 à J+7
+Forecast J+1 → J+7
         ↓
 Stock Recommendation
         ↓
 Streamlit Dashboard
-        ↓
-Production
 ```
 
 ---
 
-# 2. Progression globale
+# 2. Nature des données
 
-| Étape                     | Statut    |
-| ------------------------- | --------- |
-| J1 — Initialisation       | ✅ TERMINÉ |
-| J2 — Dataset              | ✅ TERMINÉ |
-| J3 — Data Cleaning        | ✅ TERMINÉ |
-| J4 — EDA                  | ✅ TERMINÉ |
-| J5 — Feature Engineering  | ✅ TERMINÉ |
-| J6 — Machine Learning     | ⏳ À VENIR |
-| J7 — Forecast             | ⏳ À VENIR |
-| J8 — Stock Recommendation | ⏳ À VENIR |
-| J9 — Streamlit Dashboard  | ⏳ À VENIR |
-| J10 — Production          | ⏳ À VENIR |
+Le dataset utilisé pour le projet est **synthétique**.
+
+Il a été généré à partir de la structure métier/catalogue de KShop afin de disposer d'un historique suffisamment long pour construire un projet de forecasting crédible.
+
+Il ne représente pas des transactions clients réelles.
+
+Cette information doit être clairement mentionnée dans le README et dans le portfolio.
 
 ---
 
-# 3. J1 — Initialisation
+# 3. Dataset
 
-**Statut : ✅ TERMINÉ**
-
-Le projet Python `ai-sales-forecasting` a été initialisé.
-
-Structure principale :
-
-```text
-ai-sales-forecasting/
-├── config/
-├── dashboard/
-├── data/
-│   ├── processed/
-│   └── raw/
-├── models/
-├── notebooks/
-├── src/
-│   ├── data/
-│   ├── features/
-│   ├── forecasting/
-│   ├── models/
-│   └── utils/
-├── tests/
-├── .env.example
-├── .gitignore
-├── PROJECT_CHECKPOINT.md
-├── README.md
-├── requirements.txt
-└── src/main.py
-```
-
-Point d'entrée :
-
-```text
-src/main.py
-```
-
-Validation :
-
-```text
-AI Sales Forecasting - Project initialized successfully.
-```
-
----
-
-# 4. J2 — Dataset
-
-**Statut : ✅ TERMINÉ**
-
-Dataset utilisé :
+## Dataset principal
 
 ```text
 data/raw/kshop_sales_synthetic.csv
 ```
 
-Nature du dataset :
-
-**Dataset synthétique**, construit à partir de la structure métier et du catalogue KShop.
-
-Le dataset ne représente pas de vraies transactions clients.
-
-### Caractéristiques
+Période :
 
 ```text
-Période        : 2025-09-01 → 2026-08-31
-Durée          : 365 jours
-Produits       : 14
-Granularité    : journalière / produit
-Observations   : 5 110
-Colonnes       : 7
-Random seed    : 42
+2025-09-01 → 2026-08-31
+```
+
+Caractéristiques :
+
+```text
+365 jours
+14 produits
+5 110 lignes
+1 ligne = 1 produit / 1 jour
 ```
 
 Colonnes :
@@ -142,35 +95,135 @@ unit_price
 revenue
 ```
 
-Target prévue pour le Machine Learning :
+Target Machine Learning :
 
 ```text
 quantity
 ```
 
-### Validation J2
+---
+
+# 4. Structure du projet
 
 ```text
-Dataset généré                         ✅
-Structure correcte                     ✅
-Dates valides                          ✅
-14 produits                            ✅
-365 jours                              ✅
-Quantités valides                      ✅
-Prix valides                           ✅
-Revenue cohérent                       ✅
-Aucun problème critique                ✅
-```
-
-Commit J2 :
-
-```text
-ff629be chore: complete J2 dataset validation
+ai-sales-forecasting/
+│
+├── config/
+│
+├── dashboard/
+│
+├── data/
+│   ├── processed/
+│   │   ├── eda/
+│   │   ├── ml_ready/
+│   │   ├── ml_split/
+│   │   ├── sales_clean.csv
+│   │   ├── sales_calendar_features.csv
+│   │   ├── sales_lag_features.csv
+│   │   ├── sales_rolling_features.csv
+│   │   └── sales_ml_ready.csv
+│   │
+│   └── raw/
+│       └── kshop_sales_synthetic.csv
+│
+├── models/
+│   ├── random_forest.joblib
+│   ├── gradient_boosting.joblib
+│   ├── hist_gradient_boosting.joblib
+│   ├── final_model.joblib
+│   └── final_model_metadata.json
+│
+├── notebooks/
+│
+├── src/
+│   ├── data/
+│   ├── features/
+│   ├── forecasting/
+│   ├── models/
+│   └── utils/
+│
+├── tests/
+│
+├── .env.example
+├── .gitignore
+├── PROJECT_CHECKPOINT.md
+├── README.md
+├── requirements.txt
+└── src/main.py
 ```
 
 ---
 
-# 5. J3 — Data Cleaning
+# 5. J1 — INITIALISATION
+
+**Statut : ✅ TERMINÉ**
+
+Projet initialisé.
+
+Environnement Python/Conda créé :
+
+```text
+ai-sales-forecasting
+```
+
+Python :
+
+```text
+3.12.14
+```
+
+Stack principale :
+
+```text
+NumPy
+Pandas
+Scikit-learn
+Matplotlib
+Plotly
+Streamlit
+SQLAlchemy
+PostgreSQL / psycopg2
+python-dotenv
+Joblib
+OpenPyXL
+Jupyter
+Pytest
+```
+
+`src/main.py` validé.
+
+---
+
+# 6. J2 — DATASET
+
+**Statut : ✅ TERMINÉ**
+
+Dataset synthétique généré et validé.
+
+Résultats :
+
+```text
+5 110 lignes
+14 produits
+365 jours
+2025-09-01 → 2026-08-31
+```
+
+Contrôles effectués :
+
+```text
+[PASS] Colonnes requises
+[PASS] Dates
+[PASS] Quantités
+[PASS] Prix
+[PASS] Revenue
+[PASS] Absence de valeurs incohérentes
+[PASS] Cohérence revenue = quantity × unit_price
+```
+
+---
+
+# 7. J3 — DATA CLEANING
 
 **Statut : ✅ TERMINÉ**
 
@@ -186,28 +239,7 @@ Output :
 data/processed/sales_clean.csv
 ```
 
-Script principal :
-
-```text
-src/data/clean_sales.py
-```
-
-### Règles appliquées
-
-* Validation des dates
-* Validation de `product_id`
-* Validation de `quantity`
-* Validation de `unit_price`
-* Recalcul de `revenue`
-* Suppression des doublons `date + product_id`
-* Nettoyage des espaces textuels
-* Gestion explicite des valeurs NULL critiques
-* Analyse des valeurs extrêmes
-* Conservation des anomalies cohérentes
-
-Le dataset RAW n'a pas été modifié.
-
-### Résultats
+Résultats :
 
 ```text
 Lignes initiales          : 5 110
@@ -218,36 +250,35 @@ Prix invalides            : 0
 Doublons supprimés       : 0
 ```
 
-Validation :
+Règles appliquées :
 
-```text
-J3 — DATA CLEANING : OK
-```
+* validation des dates ;
+* validation de `product_id` ;
+* validation de `quantity` ;
+* validation de `unit_price` ;
+* recalcul du revenue ;
+* suppression des doublons `date + product_id` ;
+* nettoyage des espaces ;
+* traitement des NULL critiques.
 
-Commit J3 :
-
-```text
-924bcb7 feat: complete J3 data cleaning
-```
+Les valeurs extrêmes cohérentes ont été conservées pour analyse.
 
 ---
 
-# 6. J4 — Exploratory Data Analysis
+# 8. J4 — EXPLORATORY DATA ANALYSIS
 
 **Statut : ✅ TERMINÉ**
 
-J4 a été entièrement validé.
-
-## 6.1 Vue générale
+## 8.1 Profil général
 
 ```text
-Lignes          : 5 110
-Produits        : 14
-Jours            : 365
-Colonnes         : 7
+5 110 lignes
+14 produits
+365 jours
+7 colonnes
 ```
 
-## 6.2 Quantity
+## 8.2 Quantity
 
 ```text
 Total       : 28 076
@@ -261,13 +292,7 @@ P99         : 17
 Zéros       : 142
 ```
 
-Les observations à quantité nulle représentent environ :
-
-```text
-2.78 %
-```
-
-## 6.3 Revenue
+## 8.3 Revenue
 
 ```text
 Total       : 67 966 700 AR
@@ -278,655 +303,233 @@ P95         : 33 000 AR
 P99         : 49 500 AR
 ```
 
-## 6.4 Performance journalière
+## 8.4 Analyse temporelle
+
+Moyenne quotidienne :
 
 ```text
-Quantity moyenne : 76.92
-Quantity médiane : 75
-Minimum          : 36
-Maximum          : 152
-
-CA moyen         : 186 210.14 AR
-CA médian        : 180 700 AR
-CA minimum       : 92 400 AR
-CA maximum       : 372 200 AR
+Quantity : 76.92
+Revenue  : 186 210.14 AR
 ```
 
-## 6.5 Analyse temporelle
-
-Jour le plus performant :
+Tendance :
 
 ```text
-Samedi
-```
-
-Jour le moins performant :
-
-```text
-Dimanche
-```
-
-Mois le plus performant :
-
-```text
-Décembre 2025
-```
-
-Mois le moins performant :
-
-```text
-Février 2026
-```
-
-Évolution de la demande :
-
-```text
-Premiers 30 jours : 71.17
-Derniers 30 jours : 82.93
+Premiers 30 jours : 71.17 unités/jour
+Derniers 30 jours : 82.93 unités/jour
 
 Évolution : +16.53 %
 ```
 
-Sur 90 jours :
+Les 90 derniers jours présentent également une progression par rapport aux 90 premiers jours.
 
-```text
-Premiers 90 jours : 76.76
-Derniers 90 jours : 83.08
-
-Évolution : +8.24 %
-```
-
-## 6.6 Analyse produits
+## 8.5 Analyse des produits
 
 Produit avec le plus gros volume :
 
 ```text
 Coca-Cola 33cl
-Quantité : 3 995
+3995 unités
 ```
 
 Produit avec le plus gros chiffre d'affaires :
 
 ```text
 Huile alimentaire 1L
-CA : 9 190 500 AR
+9 190 500 AR
 ```
 
 Produit le plus variable :
 
 ```text
 Produit 001 CV
-CV : 0.74
+CV = 0.74
 ```
 
 Produit le plus stable :
 
 ```text
 Coca-Cola 33cl
-CV : 0.40
+CV = 0.40
 ```
 
-## 6.7 Analyse des valeurs extrêmes
+## 8.6 Anomalies
 
 ```text
-Observations > P95 : 17 jours
-Observations > P99 : 4 jours
+17 jours > P95
+4 jours > P99
 ```
 
-Les jours extrêmes sont principalement concentrés sur :
+Les journées extrêmes sont principalement concentrées sur :
 
 ```text
 Vendredi
 Samedi
 ```
 
-Les anomalies cohérentes ont été conservées.
+Les anomalies ont été conservées pour ne pas supprimer artificiellement des comportements potentiellement utiles au forecasting.
 
-## 6.8 Corrélations
+## 8.7 Conclusion EDA
 
-Corrélations au niveau des lignes :
+Facteurs importants identifiés :
 
-```text
-quantity ↔ revenue      : 0.511
-quantity ↔ unit_price   : -0.280
-unit_price ↔ revenue    : 0.510
-```
+* historique de la demande ;
+* jour de la semaine ;
+* mois ;
+* produit ;
+* saisonnalité ;
+* tendances temporelles ;
+* lags ;
+* moyennes mobiles.
 
-Au niveau produit :
-
-```text
-unit_price ↔ revenue    : 0.781
-unit_price ↔ quantity   : -0.431
-quantity ↔ revenue      : 0.096
-```
-
-### Conclusions J4
-
-```text
-Target ML              : quantity
-Historique temporel    : important
-Calendrier             : important
-LAG                    : pertinent
-Rolling features       : pertinentes
-Anomalies               : à conserver
-CA                       : quantity × unit_price
-```
-
-Une différence de nommage entre certaines catégories a également été identifiée :
-
-```text
-Alimentaire
-Produits alimentaires
-```
-
-Cette incohérence a été signalée sans modification automatique.
-
-Commit J4 :
-
-```text
-fe779a6 feat: complete J4 EDA
-```
-
----
-
-# 7. J5 — Feature Engineering
-
-**Statut : ✅ VALIDÉ**
-
-J5.1 à J5.7 sont entièrement terminés et validés.
-
-J5.8 — Commit + GitHub est la prochaine étape.
-
----
-
-# 8. J5.1 — Définition des règles
-
-**Statut : ✅ VALIDÉ**
-
-Target ML :
+Target retenue :
 
 ```text
 quantity
 ```
 
-Features calendaires :
+Le chiffre d'affaires sera ensuite calculé à partir des quantités prévues :
 
 ```text
-day_of_week
-day_of_month
-month
-week_of_year
-is_weekend
-```
-
-Features LAG :
-
-```text
-lag_1
-lag_7
-lag_14
-```
-
-Features Rolling :
-
-```text
-rolling_mean_7
-rolling_mean_14
-rolling_mean_30
-```
-
-### Règles
-
-Les LAG et Rolling sont calculés :
-
-```text
-par product_id
-après tri par product_id + date
-```
-
-Aucune feature ne doit utiliser la demande future.
-
-Aucune normalisation n'est réalisée pendant J5.
-
-Aucun entraînement Machine Learning n'est réalisé pendant J5.
-
----
-
-# 9. J5.2 — Variables calendaires
-
-**Statut : ✅ VALIDÉ**
-
-Script :
-
-```text
-src/data/create_calendar_features.py
-```
-
-Source :
-
-```text
-data/processed/sales_clean.csv
-```
-
-Output :
-
-```text
-data/processed/sales_calendar_features.csv
-```
-
-Features :
-
-```text
-day_of_week
-day_of_month
-month
-week_of_year
-is_weekend
-```
-
-### Validation
-
-```text
-5 110 lignes                         ✅
-14 produits                          ✅
-365 jours                            ✅
-Dates valides                        ✅
-5 features présentes                 ✅
-Aucun NULL                           ✅
-Valeurs calendaires valides          ✅
-Cohérence weekend                    ✅
-Nombre de lignes inchangé            ✅
-quantity inchangée                   ✅
-revenue inchangé                     ✅
-Données sources intactes             ✅
+forecast_revenue = forecast_quantity × unit_price
 ```
 
 ---
 
-# 10. J5.3 — Variables LAG
+# 9. J5 — FEATURE ENGINEERING
 
-**Statut : ✅ VALIDÉ**
+**Statut : ✅ TERMINÉ**
 
-Script :
-
-```text
-src/data/create_lag_features.py
-```
-
-Source :
-
-```text
-data/processed/sales_calendar_features.csv
-```
-
-Output :
-
-```text
-data/processed/sales_lag_features.csv
-```
-
-Features :
-
-```text
-lag_1
-lag_7
-lag_14
-```
-
-Définition :
-
-```text
-lag_1  = quantity à J-1
-lag_7  = quantity à J-7
-lag_14 = quantity à J-14
-```
-
-Calcul effectué séparément par :
-
-```text
-product_id
-```
-
-### NULL structurels
-
-```text
-lag_1  : 14
-lag_7  : 98
-lag_14 : 196
-```
-
-### Validation
-
-```text
-5 110 lignes                         ✅
-14 produits                          ✅
-Tri product_id + date                ✅
-Ordre chronologique                  ✅
-LAG correctement calculés            ✅
-NULL structurels conformes           ✅
-Valeurs LAG >= 0                     ✅
-Absence de data leakage              ✅
-Données sources intactes             ✅
-```
-
----
-
-# 11. J5.4 — Variables Rolling
-
-**Statut : ✅ VALIDÉ**
-
-Script :
-
-```text
-src/data/create_rolling_features.py
-```
-
-Source :
-
-```text
-data/processed/sales_lag_features.csv
-```
-
-Output :
-
-```text
-data/processed/sales_rolling_features.csv
-```
-
-Features :
-
-```text
-rolling_mean_7
-rolling_mean_14
-rolling_mean_30
-```
-
-Méthode :
-
-```text
-shift(1) + rolling(...)
-```
-
-Ainsi, la valeur du jour courant n'est jamais utilisée pour calculer sa propre moyenne historique.
-
-### NULL structurels
-
-```text
-rolling_mean_7  : 98
-rolling_mean_14 : 196
-rolling_mean_30 : 420
-```
-
-### Validation
-
-```text
-5 110 lignes                         ✅
-14 produits                          ✅
-Tri chronologique                    ✅
-Rolling 7 correctement calculée      ✅
-Rolling 14 correctement calculée     ✅
-Rolling 30 correctement calculée     ✅
-NULL structurels conformes           ✅
-Valeurs Rolling >= 0                 ✅
-Absence de data leakage              ✅
-Données sources intactes             ✅
-```
-
----
-
-# 12. J5.5 — Dataset ML final
-
-**Statut : ✅ VALIDÉ**
-
-Script :
-
-```text
-src/data/create_ml_dataset.py
-```
-
-Source :
-
-```text
-data/processed/sales_rolling_features.csv
-```
-
-Output :
+Dataset ML :
 
 ```text
 data/processed/sales_ml_ready.csv
 ```
 
-### Structure finale
-
-Les 18 colonnes sont conservées :
-
-```text
-date
-product_id
-product_name
-category
-quantity
-unit_price
-revenue
-
-day_of_week
-day_of_month
-month
-week_of_year
-is_weekend
-
-lag_1
-lag_7
-lag_14
-
-rolling_mean_7
-rolling_mean_14
-rolling_mean_30
-```
-
-### Target
-
-```text
-quantity
-```
-
-### Filtrage
-
-Seules les lignes ne disposant pas de l'historique nécessaire aux features ML sont supprimées.
-
-La Rolling 30 nécessite 30 jours historiques.
-
-Donc :
-
-```text
-30 premiers jours × 14 produits = 420 lignes retirées
-```
-
-### Résultats
-
-```text
-Dataset source       : 5 110 lignes
-Dataset ML           : 4 690 lignes
-Lignes retirées      : 420
-Produits             : 14
-Jours / produit      : 335
-Colonnes             : 18
-```
-
-Période du dataset ML :
-
-```text
-2025-10-01 → 2026-08-31
-```
-
----
-
-# 13. J5.6 — Quality Control
-
-**Statut : ✅ VALIDÉ À 100 %**
-
-Script :
-
-```text
-src/data/quality_check_ml_dataset.py
-```
-
-Dataset contrôlé :
-
-```text
-data/processed/sales_ml_ready.csv
-```
-
-### Contrôles
-
-```text
-Structure                         ✅
-Types                             ✅
-NULL                              ✅ Aucun
-Doublons complets                 ✅ Aucun
-Clés date + product_id            ✅ Uniques
-14 produits                       ✅
-335 jours / produit               ✅
-Continuité temporelle             ✅
-quantity >= 0                     ✅
-quantity entière                  ✅
-unit_price > 0                    ✅
-revenue = quantity × unit_price   ✅
-Features calendaires              ✅
-LAG                               ✅
-Rolling                           ✅
-Data leakage                      ✅ Aucun
-Valeurs extrêmes                  ✅ Analysées
-Distribution produits             ✅ Équilibrée
-Intégrité finale                  ✅
-```
-
-### Distribution de `quantity`
-
-```text
-count    4690.000000
-mean        5.531130
-std         3.716378
-min         0.000000
-25%         3.000000
-50%         5.000000
-75%         8.000000
-max        26.000000
-```
-
-Valeurs extrêmes :
-
-```text
-P95 quantity : 13
-P99 quantity : 17
-
-Observations > P95 : 183
-Observations > P99 : 40
-```
-
-Les valeurs extrêmes sont conservées.
-
----
-
-# 14. J5.7 — Validation finale Feature Engineering
-
-**Statut : ✅ VALIDÉ À 100 %**
-
-Script :
-
-```text
-src/data/validate_feature_engineering.py
-```
-
-### Pipeline validé
-
-```text
-sales_clean.csv
-        ↓
-5 110 lignes
-        ↓
-sales_calendar_features.csv
-        ↓
-5 110 lignes
-        ↓
-sales_lag_features.csv
-        ↓
-5 110 lignes
-        ↓
-sales_rolling_features.csv
-        ↓
-5 110 lignes
-        ↓
-sales_ml_ready.csv
-        ↓
-4 690 lignes
-```
-
-### Validation globale
-
-```text
-Tous les datasets disponibles            ✅
-Structure du pipeline                    ✅
-14 produits                              ✅
-Historique 365 jours                     ✅
-Dataset ML 335 jours / produit           ✅
-Intégrité des données sources             ✅
-Features calendaires                      ✅
-Features LAG                              ✅
-Features Rolling                          ✅
-NULL structurels conformes                ✅
-Réduction du dataset correcte             ✅
-Target quantity conservée                 ✅
-Absence de data leakage                   ✅
-18 colonnes finales                       ✅
-4 690 observations ML                     ✅
-```
-
-### Résultat final J5.7
-
-```text
-Target               : quantity
-Produits             : 14
-Historique           : 365 jours
-Dataset ML           : 335 jours / produit
-Observations ML      : 4 690
-Colonnes finales     : 18
-Data leakage         : Aucun
-NULL ML              : Aucun
-```
-
-```text
-============================================================
-J5.7 — VALIDATION FINALE : OK
-============================================================
-```
-
----
-
-# 15. Dataset ML final
-
-Fichier principal :
-
-```text
-data/processed/sales_ml_ready.csv
-```
-
-Dimensions :
+Résultat :
 
 ```text
 4 690 lignes
 18 colonnes
 14 produits
-335 jours par produit
-```
-
-Période :
-
-```text
 2025-10-01 → 2026-08-31
 ```
 
-### Features ML
+## Features calendaires
+
+```text
+day_of_week
+day_of_month
+month
+week_of_year
+is_weekend
+```
+
+## Features Lag
+
+```text
+lag_1
+lag_7
+lag_14
+```
+
+## Features Rolling
+
+```text
+rolling_mean_7
+rolling_mean_14
+rolling_mean_30
+```
+
+Les lags et rolling features sont calculés séparément pour chaque `product_id`.
+
+Tri chronologique :
+
+```text
+product_id
+date
+```
+
+Contrôles :
+
+```text
+[PASS] Feature engineering
+[PASS] Absence de data leakage
+[PASS] Structure finale
+[PASS] Cohérence temporelle
+[PASS] Dataset ML Ready
+```
+
+---
+
+# 10. J6 — MACHINE LEARNING
+
+**Statut : ✅ TERMINÉ**
+
+---
+
+## J6.1 — Temporal Split
+
+**Statut : ✅ VALIDÉ**
+
+Dataset :
+
+```text
+data/processed/sales_ml_ready.csv
+```
+
+Split chronologique :
+
+### Train
+
+```text
+2025-10-01 → 2026-06-30
+3 822 lignes
+```
+
+### Validation
+
+```text
+2026-07-01 → 2026-07-31
+434 lignes
+```
+
+### Test
+
+```text
+2026-08-01 → 2026-08-31
+434 lignes
+```
+
+Contrôles :
+
+```text
+[PASS] Aucun chevauchement temporel
+[PASS] Train < Validation < Test
+[PASS] 14 produits dans chaque split
+[PASS] Target valide
+[PASS] Aucun doublon date + product_id
+```
+
+---
+
+# 11. J6.2 — Préparation X / y
+
+**Statut : ✅ VALIDÉ**
+
+Script :
+
+```text
+src/models/prepare_ml_data.py
+```
+
+Features catégorielles :
+
+```text
+product_id
+```
+
+Features numériques :
 
 ```text
 day_of_week
@@ -942,146 +545,392 @@ rolling_mean_14
 rolling_mean_30
 ```
 
-### Target
+Target :
 
 ```text
 quantity
 ```
 
----
-
-# 16. Fichiers créés pendant J5
-
-### Scripts
+Résultats :
 
 ```text
-src/data/create_calendar_features.py
-src/data/create_lag_features.py
-src/data/create_rolling_features.py
-src/data/create_ml_dataset.py
-src/data/quality_check_ml_dataset.py
-src/data/validate_feature_engineering.py
-```
+X_train      : (3822, 12)
+y_train      : (3822,)
 
-### Datasets intermédiaires
+X_validation : (434, 12)
+y_validation : (434,)
 
-```text
-data/processed/sales_calendar_features.csv
-data/processed/sales_lag_features.csv
-data/processed/sales_rolling_features.csv
-data/processed/sales_ml_ready.csv
+X_test       : (434, 12)
+y_test       : (434,)
 ```
 
 ---
 
-# 17. Décisions techniques importantes
+# 12. J6.3 — Baseline
 
-## Dataset synthétique
+**Statut : ✅ VALIDÉ**
 
-Le dataset de forecasting est synthétique.
+Baseline :
 
-Il a été généré afin de disposer d'un historique suffisamment riche pour construire et tester le pipeline de Machine Learning.
+```text
+lag_7
+```
 
-Il ne doit pas être présenté comme un historique réel de transactions clients.
+Évaluation sur Validation :
+
+```text
+MAE  : 2.7442
+RMSE : 3.6604
+R²   : 0.0394
+```
+
+Le Test n'a pas été utilisé.
 
 ---
 
-## Target
+# 13. J6.4 — Entraînement des modèles
 
-La variable cible du modèle est :
+**Statut : ✅ VALIDÉ**
+
+Modèles entraînés :
+
+```text
+1. Random Forest Regressor
+2. Gradient Boosting Regressor
+3. HistGradientBoosting Regressor
+```
+
+Les modèles ont été entraînés uniquement sur le Train.
+
+Modèles sauvegardés :
+
+```text
+models/random_forest.joblib
+models/gradient_boosting.joblib
+models/hist_gradient_boosting.joblib
+```
+
+---
+
+# 14. J6.5 — Évaluation Validation
+
+**Statut : ✅ VALIDÉ**
+
+Résultats :
+
+| Modèle                |        MAE |       RMSE |         R² |
+| --------------------- | ---------: | ---------: | ---------: |
+| **Gradient Boosting** | **2.0337** | **2.6249** | **0.5060** |
+| Random Forest         |     2.0640 |     2.6599 |     0.4928 |
+| HistGradientBoosting  |     2.1287 |     2.7862 |     0.4434 |
+| Baseline lag_7        |     2.7442 |     3.6604 |     0.0394 |
+
+Gradient Boosting :
+
+```text
+Gain MAE  : 25.89 %
+Gain RMSE : 28.29 %
+```
+
+Gradient Boosting est meilleur sur :
+
+```text
+MAE
+RMSE
+R²
+```
+
+---
+
+# 15. J6.6 — Comparaison approfondie
+
+**Statut : ⏭️ NON EXÉCUTÉ SÉPARÉMENT**
+
+J6.6 n'a pas fait l'objet d'une exécution indépendante.
+
+La comparaison nécessaire a néanmoins été réalisée dans J6.5 et J6.7 à partir des métriques Validation.
+
+Aucune exécution fictive de J6.6 ne doit être déclarée comme réalisée.
+
+---
+
+# 16. J6.7 — Sélection du meilleur modèle
+
+**Statut : ✅ VALIDÉ**
+
+Critères :
+
+```text
+1. MAE ASC
+2. RMSE ASC
+3. R² DESC
+```
+
+Classement :
+
+```text
+1. gradient_boosting
+2. random_forest
+3. hist_gradient_boosting
+4. baseline_lag_7
+```
+
+Modèle sélectionné :
+
+```text
+Gradient Boosting
+```
+
+Performances :
+
+```text
+MAE  : 2.0337
+RMSE : 2.6249
+R²   : 0.5060
+```
+
+Fichier :
+
+```text
+data/processed/ml_ready/best_model_selection.csv
+```
+
+Validation :
+
+```text
+[PASS] Gradient Boosting sélectionné
+[PASS] Meilleur MAE
+[PASS] Meilleur RMSE
+[PASS] Meilleur R²
+[PASS] Test NON utilisé
+```
+
+---
+
+# 17. J6.8 — Sauvegarde du modèle final
+
+**Statut : ✅ VALIDÉ**
+
+Modèle final :
+
+```text
+models/final_model.joblib
+```
+
+Métadonnées :
+
+```text
+models/final_model_metadata.json
+```
+
+Target :
 
 ```text
 quantity
 ```
 
-Le chiffre d'affaires pourra ensuite être estimé avec :
+Nombre de features :
 
 ```text
-forecast_quantity × unit_price
+12
+```
+
+Métadonnées conservées :
+
+* modèle sélectionné ;
+* target ;
+* features ;
+* datasets Train/Validation ;
+* métriques Validation ;
+* critères de sélection ;
+* confirmation que le Test n'a pas été utilisé.
+
+Validation :
+
+```text
+[PASS] Modèle final non vide
+[PASS] Métadonnées valides
+[PASS] Target = quantity
+[PASS] 12 features enregistrées
+[PASS] Test NON utilisé
 ```
 
 ---
 
-## Data leakage
+# 18. J6.9 — Évaluation finale sur le Test
 
-Les variables historiques sont construites uniquement à partir des observations précédentes.
+**Statut : ✅ VALIDÉ**
 
-Les LAG utilisent :
-
-```text
-J-1
-J-7
-J-14
-```
-
-Les Rolling utilisent uniquement les jours précédents :
+Dataset Test :
 
 ```text
-J-1 jusqu'aux fenêtres historiques nécessaires
+2026-08-01 → 2026-08-31
+434 lignes
+14 produits
 ```
 
-Aucune information future n'est utilisée.
+Le Test a été utilisé pour la première fois à cette étape.
+
+## Modèle final
+
+```text
+Gradient Boosting
+```
+
+Résultats Test :
+
+```text
+MAE  : 2.0928
+RMSE : 2.7149
+R²   : 0.5474
+```
+
+## Baseline Test
+
+```text
+MAE  : 2.9793
+RMSE : 3.9691
+R²   : 0.0327
+```
+
+## Amélioration finale
+
+```text
+Gain MAE  : 29.75 %
+Gain RMSE : 31.60 %
+```
+
+Le modèle final généralise correctement sur le Test.
+
+Le R² Test :
+
+```text
+0.5474
+```
+
+est supérieur au R² Validation :
+
+```text
+0.5060
+```
+
+Aucun signe évident de surapprentissage sévère n'est observé à partir de cette comparaison.
+
+Prédictions :
+
+```text
+Moyenne : 5.9745
+Minimum : 1.4912
+Maximum : 16.2720
+```
+
+Fichiers créés :
+
+```text
+data/processed/ml_ready/final_model_test_predictions.csv
+
+data/processed/ml_ready/final_model_test_evaluation.csv
+```
+
+Validation :
+
+```text
+[PASS] 434 prédictions générées
+[PASS] Aucune prédiction NULL
+[PASS] Période Test correcte
+[PASS] Test évalué uniquement à J6.9
+[PASS] Évaluation finale terminée
+```
 
 ---
 
-## Anomalies
+# 19. Résultat final du Machine Learning
 
-Les valeurs extrêmes identifiées pendant J4 sont conservées.
+Le modèle de référence du projet est :
 
-Elles ne sont pas supprimées automatiquement, car elles peuvent représenter des comportements commerciaux légitimes.
+```text
+Gradient Boosting Regressor
+```
+
+Performance finale sur le Test :
+
+```text
+MAE  = 2.0928
+RMSE = 2.7149
+R²   = 0.5474
+```
+
+Comparaison avec la baseline :
+
+```text
+Baseline MAE      = 2.9793
+Gradient Boosting = 2.0928
+
+Amélioration      = 29.75 %
+```
+
+Conclusion :
+
+> Le Gradient Boosting est retenu comme modèle de forecasting de la demande pour la suite du projet.
 
 ---
 
-## Normalisation
-
-Aucune normalisation n'est réalisée pendant J5.
-
-La préparation spécifique aux modèles sera traitée pendant J6 si nécessaire.
-
----
-
-# 18. Git — état du projet
-
-Commits principaux :
+# 20. Artefacts Machine Learning
 
 ```text
-J2  : ff629be chore: complete J2 dataset validation
-J3  : 924bcb7 feat: complete J3 data cleaning
-J4.5: 65caa49 feat: complete J4.5 anomaly and relationship analysis
-J4  : fe779a6 feat: complete J4 EDA
+models/
+├── random_forest.joblib
+├── gradient_boosting.joblib
+├── hist_gradient_boosting.joblib
+├── final_model.joblib
+└── final_model_metadata.json
 ```
 
-### J5
-
 ```text
-J5.1 → J5.7 : ✅ VALIDÉS
-J5.8          : ⏳ À FAIRE
-```
-
-Commit prévu :
-
-```text
-feat: complete J5 feature engineering
+data/processed/ml_ready/
+├── X_train.csv
+├── y_train.csv
+├── X_validation.csv
+├── y_validation.csv
+├── X_test.csv
+├── y_test.csv
+├── baseline_validation.csv
+├── training_results.csv
+├── model_evaluation_validation.csv
+├── best_model_selection.csv
+├── final_model_test_predictions.csv
+└── final_model_test_evaluation.csv
 ```
 
 ---
 
-# 19. Prochaine étape — J5.8
+# 21. Git
 
-## J5.8 — Commit + GitHub
-
-Objectifs :
+Commits précédents validés :
 
 ```text
-1. Vérifier git status
-2. Vérifier les modifications
-3. Vérifier les fichiers J5
-4. Ajouter uniquement les fichiers nécessaires
-5. Créer le commit J5
-6. Push vers GitHub
-7. Vérifier le repository
-8. Vérifier que le working tree est propre
+07fd765 chore: initialize AI sales forecasting project
+
+ff629be chore: complete J2 dataset validation
+
+924bcb7 feat: complete J3 data cleaning
+
+65caa49 feat: complete J4.5 anomaly and relationship analysis
+
+fe779a6 feat: complete J4 EDA
+
+8acac3c feat: complete J5 feature engineering
 ```
+
+Dernier état Git connu avant J6 :
+
+```text
+main
+origin/main
+working tree clean
+```
+
+J6 doit maintenant être préparé pour un commit dédié après vérification des nouveaux artefacts.
 
 Le fichier privé :
 
@@ -1089,44 +938,111 @@ Le fichier privé :
 kshop_export.sql
 ```
 
-ne doit jamais être ajouté au repository.
+reste exclu du dépôt via :
 
-Les secrets, mots de passe, credentials et chaînes de connexion ne doivent pas être commités.
+```text
+*.sql
+```
+
+Aucune donnée sensible issue de la base KShop ne doit être commitée.
 
 ---
 
-# 20. État actuel du projet
+# 22. État global du projet
 
 ```text
-============================================================
-AI SALES FORECASTING
-============================================================
-
-J1  — INITIALISATION          ✅
-J2  — DATASET                 ✅
-J3  — DATA CLEANING           ✅
-J4  — EDA                     ✅
-J5  — FEATURE ENGINEERING     ✅
-J6  — MACHINE LEARNING        ⏳
-J7  — FORECAST                ⏳
-J8  — STOCK RECOMMENDATION    ⏳
-J9  — STREAMLIT DASHBOARD     ⏳
-J10 — PRODUCTION              ⏳
-
-============================================================
-CURRENT CHECKPOINT : J5.7
-============================================================
-
-Feature Engineering : VALIDÉ À 100 %
-Dataset ML          : 4 690 lignes
-Produits             : 14
-Features             : 11
-Colonnes finales     : 18
-Target               : quantity
-Data leakage         : Aucun
-NULL ML              : Aucun
-
-PROCHAINE ÉTAPE :
-J5.8 — COMMIT + GITHUB
-============================================================
+J1  Initialisation                  ✅
+J2  Dataset                         ✅
+J3  Data Cleaning                   ✅
+J4  EDA                             ✅
+J5  Feature Engineering             ✅
+J6  Machine Learning                ✅
+J7  Forecasting                     ⏳
+J8  Stock Recommendation            ⏳
+J9  Streamlit Dashboard             ⏳
+J10 Production / Deployment         ⏳
 ```
+
+---
+
+# 23. Prochaine étape — J7
+
+## J7 — FORECASTING J+1 À J+7
+
+Objectif :
+
+Utiliser le modèle final :
+
+```text
+models/final_model.joblib
+```
+
+pour produire des prévisions de demande :
+
+```text
+J+1
+J+2
+J+3
+J+4
+J+5
+J+6
+J+7
+```
+
+pour chacun des 14 produits.
+
+Le forecasting devra prendre en compte le caractère **multi-step** du problème et éviter toute fuite de données futures.
+
+Sortie cible :
+
+```text
+data/processed/forecast/
+```
+
+avec notamment :
+
+```text
+forecast_j7.csv
+```
+
+Structure prévue :
+
+```text
+date
+product_id
+product_name
+forecast_horizon
+predicted_quantity
+unit_price
+predicted_revenue
+```
+
+La prévision de chiffre d'affaires sera dérivée de :
+
+```text
+predicted_revenue
+=
+predicted_quantity × unit_price
+```
+
+---
+
+# 24. Règle de progression
+
+Le projet suit une validation étape par étape.
+
+Une étape n'est considérée comme terminée que lorsque :
+
+```text
+1. Le code est créé
+2. Le script s'exécute correctement
+3. Les contrôles passent
+4. Les fichiers attendus sont créés
+5. Les résultats sont analysés
+6. Le checkpoint est mis à jour
+7. Le commit Git est effectué
+```
+
+**Checkpoint actuel : J6.9 — Machine Learning terminé.**
+
+**Prochaine étape : J7 — Forecasting J+1 à J+7.**
