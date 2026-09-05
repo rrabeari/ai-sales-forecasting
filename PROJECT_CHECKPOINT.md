@@ -1,8 +1,10 @@
 # AI Sales Forecasting — Project Checkpoint
 
-> Dernière mise à jour : 2026-09-04
-> Checkpoint : **J7.8**
-> Statut global : **J7 — FORECASTING TERMINÉ**
+> Dernière mise à jour : 2026-09-05
+>
+> Checkpoint : **J8.5**
+>
+> Statut global : **J8 — STOCK RECOMMENDATION TERMINÉ**
 
 ---
 
@@ -18,7 +20,7 @@
 * entraîner et comparer plusieurs modèles ;
 * sélectionner le meilleur modèle ;
 * produire des prévisions J+1 → J+7 ;
-* préparer des recommandations de stock ;
+* produire des recommandations de stock ;
 * construire un dashboard métier ;
 * préparer une architecture exploitable en production.
 
@@ -63,6 +65,7 @@ Production
 
 ```text
 ai-sales-forecasting/
+
 ├── config/
 ├── dashboard/
 ├── data/
@@ -72,6 +75,11 @@ ai-sales-forecasting/
 │   │   ├── ml_split/
 │   │   ├── forecast/
 │   │   │   └── visualizations/
+│   │   ├── stock/
+│   │   │   ├── stock_snapshot.csv
+│   │   │   ├── stock_recommendation.csv
+│   │   │   ├── stock_analysis.csv
+│   │   │   └── stock_validation.csv
 │   │   ├── sales_clean.csv
 │   │   ├── sales_calendar_features.csv
 │   │   ├── sales_lag_features.csv
@@ -90,6 +98,11 @@ ai-sales-forecasting/
 │   │   ├── visualize_forecast.py
 │   │   └── validate_forecast.py
 │   ├── models/
+│   ├── stock/
+│   │   ├── generate_stock_snapshot.py
+│   │   ├── recommend_stock.py
+│   │   ├── analyze_stock_recommendation.py
+│   │   └── validate_stock_recommendation.py
 │   └── utils/
 ├── tests/
 ├── .env.example
@@ -316,10 +329,10 @@ data/processed/sales_ml_ready.csv
 Résultats :
 
 ```text
-Lignes : 4 690
-Colonnes : 18
-Produits : 14
-Période : 2025-10-01 → 2026-08-31
+Lignes     : 4 690
+Colonnes   : 18
+Produits   : 14
+Période    : 2025-10-01 → 2026-08-31
 ```
 
 ## Features calendrier
@@ -364,15 +377,23 @@ La normalisation n'est pas réalisée à cette étape.
 
 ```text
 TRAIN
+
 2025-10-01 → 2026-06-30
+
 3 822 lignes
 
+
 VALIDATION
+
 2026-07-01 → 2026-07-31
+
 434 lignes
 
+
 TEST
+
 2026-08-01 → 2026-08-31
+
 434 lignes
 ```
 
@@ -682,9 +703,12 @@ Contrôles :
 
 ```text
 Aucune quantité future réelle utilisée : PASS
+
 Forecast récursif J+1 → J+7            : PASS
-Aucun doublon date + product_id        : PASS
-Prévisions non négatives               : PASS
+
+Aucun doublon date + product_id         : PASS
+
+Prévisions non négatives                : PASS
 ```
 
 ---
@@ -741,6 +765,7 @@ CA total        : 1 416 793.77 AR
 
 ```text
 J+5
+
 2026-09-05
 ```
 
@@ -829,7 +854,7 @@ Aucun doublon                            : PASS
 Quantité × prix = CA                     : PASS
 Analyse quotidienne présente             : PASS
 Analyse produits présente                : PASS
-Totaux cohérents                         : PASS
+Totaux cohérents                          : PASS
 Modèle final présent                     : PASS
 Métadonnées présentes                    : PASS
 Visualisations présentes                 : PASS
@@ -852,9 +877,9 @@ Période          : 2026-09-01 → 2026-09-07
 
 **Statut : ✅ VALIDÉ**
 
-Le checkpoint est mis à jour pour enregistrer la clôture de J7.
+Le checkpoint a été mis à jour pour enregistrer la clôture de J7.
 
-Le projet est maintenant officiellement à :
+Le projet a atteint :
 
 ```text
 J7 — FORECASTING : TERMINÉ
@@ -862,59 +887,340 @@ J7 — FORECASTING : TERMINÉ
 
 ---
 
-# 20. Artefacts J7
+# 20. J8 — Stock Recommendation
 
-## Scripts
+**Statut : ✅ TERMINÉ**
+
+Objectif :
+
+Transformer le forecast J+1 → J+7 et le stock disponible en recommandations opérationnelles de réapprovisionnement.
+
+Pipeline :
 
 ```text
-src/forecasting/forecast_sales.py
-src/forecasting/analyze_forecast.py
-src/forecasting/visualize_forecast.py
-src/forecasting/validate_forecast.py
+Forecast J+1 → J+7
+        │
+        ▼
+Demande prévue 7 jours
+        │
+        ▼
+Stock actuel
+        │
+        ▼
+Stock de sécurité
+        │
+        ▼
+Stock cible
+        │
+        ▼
+Quantité à commander
+        │
+        ▼
+Priorité
 ```
 
-## Données Forecast
+> ⚠️ Le stock utilisé en J8 est **synthétique**. Il ne représente pas le stock réel de KShop.
+
+---
+
+# 21. J8.1 — Contrat Stock Recommendation
+
+**Statut : ✅ VALIDÉ**
+
+Entrées :
 
 ```text
 data/processed/forecast/sales_forecast_j1_j7.csv
-data/processed/forecast/forecast_daily_summary.csv
-data/processed/forecast/forecast_product_summary.csv
+data/processed/stock/stock_snapshot.csv
 ```
 
-## Visualisations
+Sortie principale :
 
 ```text
-data/processed/forecast/visualizations/
-├── forecast_quantity_by_day.png
-├── forecast_revenue_by_day.png
-├── forecast_top_products_quantity.png
-└── forecast_top_products_revenue.png
+data/processed/stock/stock_recommendation.csv
+```
+
+Règles métier :
+
+```text
+forecast_7d = somme des prévisions J+1 → J+7
+
+safety_stock = forecast_7d × 20 %
+
+stock_target = forecast_7d + safety_stock
+
+reorder_quantity =
+    max(stock_target - current_stock, 0)
+
+status =
+    REORDER si reorder_quantity > 0
+    OK sinon
+```
+
+Le taux de sécurité de 20 % est une hypothèse métier définie pour le projet synthétique.
+
+---
+
+# 22. J8.2 — Snapshot stock synthétique
+
+**Statut : ✅ VALIDÉ**
+
+Script :
+
+```text
+src/stock/generate_stock_snapshot.py
+```
+
+Sortie :
+
+```text
+data/processed/stock/stock_snapshot.csv
+```
+
+Résultats :
+
+```text
+Produits    : 14
+Stock total : 486 unités
+```
+
+Contrôles :
+
+```text
+14 produits présents          : PASS
+Aucun doublon product_id      : PASS
+Aucun NULL                    : PASS
+Aucun stock négatif           : PASS
+current_stock entier          : PASS
+Produits alignés forecast     : PASS
+Snapshot synthétique          : PASS
+```
+
+Méthode :
+
+* utilisation des 30 derniers jours historiques ;
+* calcul de la demande quotidienne moyenne par produit ;
+* génération synthétique de 2 à 8 jours de couverture ;
+* graine aléatoire `42`.
+
+---
+
+# 23. J8.3 — Moteur de recommandation
+
+**Statut : ✅ VALIDÉ**
+
+Script :
+
+```text
+src/stock/recommend_stock.py
+```
+
+Sortie :
+
+```text
+data/processed/stock/stock_recommendation.csv
+```
+
+Résultats :
+
+```text
+Produits analysés              : 14
+Demande prévue 7 jours         : 577.39
+Produits à réapprovisionner    : 14
+Quantité totale à commander    : 205
+```
+
+Contrôles :
+
+```text
+14 produits présents          : PASS
+Forecast J+1 → J+7 validé     : PASS
+Stock actuel aligné           : PASS
+Stock de sécurité calculé     : PASS
+Stock cible calculé           : PASS
+Quantité de réapprovisionnement : PASS
+Statuts OK / REORDER          : PASS
+Aucun NULL                    : PASS
+Aucune quantité négative      : PASS
 ```
 
 ---
 
-# 21. Git
+# 24. J8.4 — Analyse des recommandations
+
+**Statut : ✅ VALIDÉ**
+
+Script :
+
+```text
+src/stock/analyze_stock_recommendation.py
+```
+
+Sortie :
+
+```text
+data/processed/stock/stock_analysis.csv
+```
+
+Résultats :
+
+```text
+Produits analysés                  : 14
+Produits à réapprovisionner       : 14
+Demande prévue 7 jours            : 577.39 unités
+Stock actuel total                : 486 unités
+Quantité totale à commander       : 205 unités
+Valeur du réapprovisionnement     : 555 800.00 AR
+```
+
+## Top 5 des réapprovisionnements
+
+```text
+1. Chips Nature
+   Stock       : 25
+   Forecast 7j : 44.00
+   Commande    : 28
+   Priorité    : HIGH
+
+2. Jus de fruit 1L
+   Stock       : 12
+   Forecast 7j : 32.46
+   Commande    : 27
+   Priorité    : HIGH
+
+3. Eau Vive 1.5L
+   Stock       : 47
+   Forecast 7j : 61.08
+   Commande    : 26
+   Priorité    : HIGH
+
+4. Biscuits Chocolat
+   Stock       : 33
+   Forecast 7j : 48.76
+   Commande    : 26
+   Priorité    : HIGH
+
+5. Fanta Orange 33cl
+   Stock       : 58
+   Forecast 7j : 62.74
+   Commande    : 17
+   Priorité    : HIGH
+```
+
+---
+
+# 25. J8.5 — Validation métier finale
+
+**Statut : ✅ VALIDÉ**
+
+Script :
+
+```text
+src/stock/validate_stock_recommendation.py
+```
+
+Rapport :
+
+```text
+data/processed/stock/stock_validation.csv
+```
+
+Contrôles réalisés :
+
+```text
+Nombre de produits                  : PASS
+14 produits                         : PASS
+Aucun doublon product_id            : PASS
+Aucun NULL                          : PASS
+Prix unitaires valides              : PASS
+Stocks actuels valides              : PASS
+Forecast 7 jours valide             : PASS
+Moyenne quotidienne valide          : PASS
+Stock de sécurité = 20 %            : PASS
+Stock cible valide                  : PASS
+Reorder quantity valide             : PASS
+Statuts OK / REORDER valides        : PASS
+Forecast total = 577.39             : PASS
+Quantité totale à commander = 205   : PASS
+Valeur totale = 555800.00 AR        : PASS
+```
+
+## Résultat final J8
+
+```text
+Produits                    : 14
+Demande prévue 7 jours      : 577.39 unités
+Stock actuel                : 486 unités
+Quantité à commander        : 205 unités
+Valeur du réapprovisionnement : 555 800 AR
+Produits à réapprovisionner : 14
+```
+
+### Note technique
+
+Une tolérance de `0.011` est utilisée lors de la validation du `stock_target` afin de gérer les écarts de ±0,01 liés aux arrondis successifs des valeurs décimales.
+
+Le calcul métier du moteur J8.3 n'est pas modifié par cette tolérance.
+
+---
+
+# 26. Artefacts J8
+
+## Scripts
+
+```text
+src/stock/generate_stock_snapshot.py
+
+src/stock/recommend_stock.py
+
+src/stock/analyze_stock_recommendation.py
+
+src/stock/validate_stock_recommendation.py
+```
+
+## Données
+
+```text
+data/processed/stock/stock_snapshot.csv
+
+data/processed/stock/stock_recommendation.csv
+
+data/processed/stock/stock_analysis.csv
+
+data/processed/stock/stock_validation.csv
+```
+
+---
+
+# 27. Git
 
 Historique principal :
 
 ```text
 07fd765 chore: initialize AI sales forecasting project
+
 ff629be chore: complete J2 dataset validation
+
 924bcb7 feat: complete J3 data cleaning
+
 fe779a6 feat: complete J4 EDA
+
 8acac3c feat: complete J5 feature engineering
+
 2dcaa4d feat: complete J6 machine learning
+
+f911100 feat: complete J7 forecasting
 ```
 
 Prochain commit :
 
 ```text
-feat: complete J7 forecasting
+feat: complete J8 stock recommendation
 ```
 
 ---
 
-# 22. État global du projet
+# 28. État global du projet
 
 | Phase                     | Statut |
 | ------------------------- | ------ |
@@ -925,60 +1231,62 @@ feat: complete J7 forecasting
 | J5 — Feature Engineering  | ✅      |
 | J6 — Machine Learning     | ✅      |
 | J7 — Forecasting          | ✅      |
-| J8 — Stock Recommendation | ⏳      |
+| J8 — Stock Recommendation | ✅      |
 | J9 — Streamlit Dashboard  | ⏳      |
 | J10 — Production          | ⏳      |
 
 ---
 
-# 23. Prochaine étape
+# 29. Prochaine étape
 
-## J8 — Stock Recommendation
+## J9 — Streamlit Dashboard
 
 Objectif :
 
-Transformer les prévisions de demande en recommandations opérationnelles de stock.
+Construire un dashboard métier interactif permettant de visualiser :
 
-Prévu :
+* KPI des ventes historiques ;
+* KPI du forecast ;
+* forecast J+1 → J+7 ;
+* chiffre d'affaires prévisionnel ;
+* produits les plus demandés ;
+* niveau de stock ;
+* produits à réapprovisionner ;
+* quantité à commander ;
+* priorités de réapprovisionnement ;
+* graphiques interactifs ;
+* tableaux détaillés ;
+* filtres par produit, catégorie et période.
 
-```text
-Forecast J+1 → J+7
-        │
-        ▼
-Analyse du stock actuel
-        │
-        ▼
-Stock de sécurité
-        │
-        ▼
-Point de commande
-        │
-        ▼
-Quantité recommandée
-        │
-        ▼
-Priorisation des produits
-```
-
-Le résultat attendu sera notamment :
+Architecture cible :
 
 ```text
-product_id
-product_name
-current_stock
-forecast_demand
-safety_stock
-reorder_point
-recommended_order_quantity
-priority
+Dataset historique
+        │
+        ├──────────────┐
+        │              │
+        ▼              ▼
+Historique         Forecast
+        │              │
+        └──────┬───────┘
+               │
+               ▼
+       Stock Recommendation
+               │
+               ▼
+        Streamlit Dashboard
 ```
+
+Statut :
+
+**⏳ À DÉMARRER**
 
 ---
 
-# 24. Statut final du checkpoint
+# 30. Statut final du checkpoint
 
-**Checkpoint actuel : J7.8**
+**Checkpoint actuel : J8.5**
 
-**Statut global : J7 — FORECASTING TERMINÉ ✅**
+**Statut global : J8 — STOCK RECOMMENDATION TERMINÉ ✅**
 
-**Prochaine phase : J8 — STOCK RECOMMENDATION**
+**Prochaine phase : J9 — STREAMLIT DASHBOARD**
